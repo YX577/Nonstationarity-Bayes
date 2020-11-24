@@ -15,11 +15,11 @@ import theano.tensor as tt
 import matplotlib.pyplot as plt
 
 def le_dados_sugar_creek():
-    df = pd.read_csv('sugar_creek_data.csv', sep=';')
+    df = pd.read_csv('data/sugar_creek_data.csv', sep=';')
     dataset=pd.Series(df.discharge.values, index=df.year)
     dataset=dataset.apply(lambda x: float(x.replace(',','.')) if isinstance(x,str) else x)
     dataset=dataset.map(lambda x: x*0.0283168465925) #conversão de sistema de unidades para m³/s
-    return dataset[:-8] #-8 leva em consideração dados até 2009 (análises de Villarini)
+    return dataset[:-8] #-8 leva em consideração dados até 2009 (análises de Villarini) [61:-8] caso queira contar 1986 pra frente
 
 def le_dados_ana_antigo():
     lista_series_mensais=[]
@@ -115,13 +115,13 @@ def stationary_posterior(annual_max):
             return bound(logp, bounds, c != 0)
         gev = pm.DensityDist('gev', gev_logp, observed=calibration_data)
 #        step = pm.Metropolis()
-        trace = pm.sample(5000, chains=2, njobs=1, progressbar=True)
+        trace = pm.sample(5000, chains=2, cores=1, progressbar=True)
     pm.traceplot(trace)
-    geweke_plot=pm.geweke(trace, 0.05, 0.5, 20)
-    gelman_and_rubin=pm.diagnostics.gelman_rubin(trace)
+    # geweke_plot=pm.geweke(trace, 0.05, 0.5, 20)
+    # gelman_and_rubin=pm.diagnostics.gelman_rubin(trace)
     posterior=pm.trace_to_dataframe(trace)
     summary=pm.summary(trace)
-    return posterior, summary, geweke_plot, gelman_and_rubin
+    return posterior, summary
 
 def gevtr(calibration_data):
     
@@ -166,13 +166,13 @@ def gevtr(calibration_data):
             bounds = tt.switch((c-0.5) > 0, value > bound1, value < bound1)
             return bound(logp, bounds, c != 0)
         gev = pm.DensityDist('gev', gev_logp, observed=detrended_series)
-        trace = pm.sample(5000, chains=3, njobs=1, progressbar=True)
+        trace = pm.sample(5000, chains=3, cores=1, progressbar=True)
     pm.traceplot(trace)
-    geweke_plot=pm.geweke(trace, 0.05, 0.5, 20)
-    gelman_and_rubin=pm.diagnostics.gelman_rubin(trace)
+    # geweke_plot=pm.geweke(trace, 0.05, 0.5, 20)
+    # gelman_and_rubin=pm.diagnostics.gelman_rubin(trace)
     posterior=pm.trace_to_dataframe(trace)
     summary=pm.summary(trace)
-    return posterior, summary, geweke_plot, gelman_and_rubin
+    return posterior, summary
 
 def gev1(annual_max, alfa=0.95):
     calibration_data=annual_max
@@ -217,13 +217,13 @@ def gev1(annual_max, alfa=0.95):
             bounds = tt.switch((c-0.5) > 0, value > bound1, value < bound1)
             return bound(logp, bounds, c != 0)
         gev = pm.DensityDist('gev', gev_logp, observed={'value': serie_lista, 't': t})
-        trace = pm.sample(5000, chains=3, njobs=1, progressbar=True)
-    df=pm.trace_to_dataframe(trace)
-    geweke_plot=pm.geweke(trace, 0.1, 0.5, 20)
-    gelman_and_rubin=pm.diagnostics.gelman_rubin(trace)
+        trace = pm.sample(5000, chains=3, cores=1, progressbar=True)
     pm.traceplot(trace)
+    # geweke_plot=pm.geweke(trace, 0.05, 0.5, 20)
+    # gelman_and_rubin=pm.diagnostics.gelman_rubin(trace)
+    posterior=pm.trace_to_dataframe(trace)
     summary=pm.summary(trace)
-    return df, summary, geweke_plot, gelman_and_rubin
+    return posterior, summary
 
 def gev2(serie_maximas_anuais, alfa=0.05):
 #    #Time covariant
@@ -272,13 +272,13 @@ def gev2(serie_maximas_anuais, alfa=0.05):
             bounds = tt.switch((c-0.5) > 0, value > bound1, value < bound1)
             return bound(logp, bounds, c != 0)
         gev = pm.DensityDist('gev', gev_logp, observed={'value': serie_lista, 't': t, 't2': t2})
-        trace = pm.sample(5000, chains=1, njobs=1, progressbar=True)
-    geweke_plot=pm.geweke(trace, 0.1, 0.5, 20)
-#    gelman_and_rubin=pm.diagnostics.gelman_rubin(trace)
-    df=pm.trace_to_dataframe(trace)
+        trace = pm.sample(5000, chains=1, cores=1, progressbar=True)
     pm.traceplot(trace)
+    # geweke_plot=pm.geweke(trace, 0.05, 0.5, 20)
+    # gelman_and_rubin=pm.diagnostics.gelman_rubin(trace)
+    posterior=pm.trace_to_dataframe(trace)
     summary=pm.summary(trace)
-    return df, summary, geweke_plot
+    return posterior, summary
 
 def gev11(serie_maximas_anuais, alfa=0.05):
     #Preparing input data
@@ -337,22 +337,23 @@ def gev11(serie_maximas_anuais, alfa=0.05):
             bounds = tt.switch((c-0.5) > 0, value > bound1, value < bound1)
             return bound(logp, bounds, c != 0)
         gev = pm.DensityDist('gev', gev_logp, observed={'value': serie_lista, 't': t})
-        trace = pm.sample(5000, chains=1, njobs=1, progressbar=True)
-    geweke_plot=pm.geweke(trace, 0.1, 0.5, 20)
-#    gelman_and_rubin=pm.diagnostics.gelman_rubin(trace)
-    df=pm.trace_to_dataframe(trace)
+        trace = pm.sample(5000, chains=1, cores=1, progressbar=True)
     pm.traceplot(trace)
+    # geweke_plot=pm.geweke(trace, 0.05, 0.5, 20)
+    # gelman_and_rubin=pm.diagnostics.gelman_rubin(trace)
+    posterior=pm.trace_to_dataframe(trace)
     summary=pm.summary(trace)
-    return df, summary, geweke_plot
+    return posterior, summary
 
 if __name__=="__main__":
     dataset=le_dados_sugar_creek()
 #    dataset=le_dados_analise()
 #    dataset=le_dados_quebec()
-#    posterior, summary, geweke_plot, gelman_and_rubin_diag=stationary_posterior(dataset)
-#    posterior, summary, geweke_plot, gelman_and_rubin_diag=gevtr(dataset)
+    # posterior, summary=stationary_posterior(dataset)
+    # posterior, summary=gevtr(dataset)
 #    posterior, summary, geweke_plot, gelman_and_rubin_diag=gev11(dataset)
-#    posterior, summary, geweke_plot, gelman_and_rubin_diag=gev1(dataset)
-    posterior, summary, geweke_plot=gev2(dataset)
+    # posterior, summary=gev1(dataset)
+    posterior, summary=gev2(dataset)
+    # posterior, summary=gev11(dataset)
 #    likelihood=likelihood_calculation(serie_maximas_anuais)
 #    params=grafico_gev11(serie_maximas_anuais, sorted_series, df_posteriori)
