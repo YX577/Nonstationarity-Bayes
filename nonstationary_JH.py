@@ -14,12 +14,13 @@ import pymc3 as pm
 import theano.tensor as tt
 import matplotlib.pyplot as plt
 
+## nothing to add. just a comment to test rebase function on github
 def le_dados_sugar_creek():
     df = pd.read_csv('data/sugar_creek_data.csv', sep=';')
     dataset=pd.Series(df.discharge.values, index=df.year)
     dataset=dataset.apply(lambda x: float(x.replace(',','.')) if isinstance(x,str) else x)
     dataset=dataset.map(lambda x: x*0.0283168465925) #conversão de sistema de unidades para m³/s
-    return dataset[:-8] #-8 leva em consideração dados até 2009 (análises de Villarini) [61:-8] caso queira contar 1986 pra frente
+    return dataset[:-8] #[-8] leva em consideração dados até 2009 (análises de Villarini) [63:-8] caso queira contar 1988 pra frente
 
 def le_dados_ana_antigo():
     lista_series_mensais=[]
@@ -119,9 +120,10 @@ def stationary_posterior(annual_max):
     pm.traceplot(trace)
     # geweke_plot=pm.geweke(trace, 0.05, 0.5, 20)
     # gelman_and_rubin=pm.diagnostics.gelman_rubin(trace)
+    waic = pm.waic(trace)
     posterior=pm.trace_to_dataframe(trace)
     summary=pm.summary(trace)
-    return posterior, summary
+    return posterior, summary, waic
 
 def gevtr(calibration_data):
     
@@ -349,11 +351,11 @@ if __name__=="__main__":
     dataset=le_dados_sugar_creek()
 #    dataset=le_dados_analise()
 #    dataset=le_dados_quebec()
-    # posterior, summary=stationary_posterior(dataset)
+    posterior, summary, waic=stationary_posterior(dataset)
     # posterior, summary=gevtr(dataset)
 #    posterior, summary, geweke_plot, gelman_and_rubin_diag=gev11(dataset)
     # posterior, summary=gev1(dataset)
-    posterior, summary=gev2(dataset)
+    # posterior, summary=gev2(dataset)
     # posterior, summary=gev11(dataset)
 #    likelihood=likelihood_calculation(serie_maximas_anuais)
 #    params=grafico_gev11(serie_maximas_anuais, sorted_series, df_posteriori)
