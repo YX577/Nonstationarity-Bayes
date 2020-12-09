@@ -14,7 +14,7 @@ import pymc3 as pm
 import theano.tensor as tt
 import matplotlib.pyplot as plt
 
-## nothing to add. just a comment to test rebase function on github
+## comment in master to test rebase
 def le_dados_sugar_creek():
     df = pd.read_csv('data/sugar_creek_data.csv', sep=';')
     dataset=pd.Series(df.discharge.values, index=df.year)
